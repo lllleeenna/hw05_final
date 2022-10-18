@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Технологии{% endblock %}
+{% block content %}
+  <div class="container py-5">
+    <div class="row">
+      <h1>Вот что я умею</h1>
+      <aside class="col-12 col-md-3">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            Python
+          </li>
+          <li class="list-group-item">
+            Django
+          </li>
+        </ul>
+      </aside>
+      <article class="col-12 col-md-9">
+        <p>
+          <h2>При создании этого сайта использованы:</h2>
+          <ui>
+            <li>
+              Python 3.7.13
+            </li>
+            <li>
+              Django 2.2.19
+            </li>
+            <li>
+              sqlite3
+            </li>
+            <li>
+              bootstrap
+            </li>
+          </ui>
+        </p>
+      </article>
+    </div>
+  </div>
+{% endblock %}

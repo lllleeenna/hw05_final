@@ -1,0 +1,8 @@
+Уважаемый пользователь {{ user.username }}!
+
+Вы запросили на сайте "Yatube" сброс пароля.
+Чтобы выполнить сброс, пройдите, пожалуйста, по ссылке
+
+{{ protocol }}://{{ domain }}{% url 'users:password_reset_confirm' uidb64=uid token=token %}
+
+С уважением, администрация сайта "Yatube".

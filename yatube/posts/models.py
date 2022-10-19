@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
@@ -32,6 +33,7 @@ class Post(models.Model):
     image = models.ImageField(
         upload_to='posts/',
         blank=True,
+        null=True,
         verbose_name='Картинка'
     )
 
@@ -102,4 +104,4 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        unique_together = [['user', 'author']]
+        UniqueConstraint(fields=['user', 'author'], name='unique_follow')

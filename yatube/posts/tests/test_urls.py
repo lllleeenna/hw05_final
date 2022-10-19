@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from django.test import Client, TestCase
+from django.urls import reverse
 
 from ..models import Group, Post, User
 
@@ -37,15 +38,24 @@ class PostsURLTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
-        self.user = User.objects.create_user(username='Elena')
-        self.authorized_client.force_login(self.user)
+        self.user_authorized = User.objects.create_user(username='Elena')
+        self.authorized_client.force_login(self.user_authorized)
         self.authorized_author_client = Client()
-        self.authorized_author_client.force_login(PostsURLTests.user)
+        self.authorized_author_client.force_login(self.user)
 
     def test_post_page_url_exists_unauthorized(self):
         """Тестирование общедоступных страниц."""
         pages = [
-            '/', '/group/testovaya-gruppa/', '/profile/auth/', '/posts/1/'
+            reverse('posts:posts_list'),
+            reverse(
+                'posts:group_list', kwargs={'slug': self.group.slug}
+            ),
+            reverse(
+                'posts:profile', kwargs={'username': self.user.username}
+            ),
+            reverse(
+                'posts:post_detail', kwargs={'post_id': self.post.id}
+            )
         ]
         for page in pages:
             with self.subTest(page=page):
@@ -59,19 +69,21 @@ class PostsURLTests(TestCase):
 
     def test_post_create_url_exists_authorized(self):
         """Тестирование создания поста авторизованым пользователем."""
-        response = self.authorized_client.get('/create/')
+        response = self.authorized_client.get(reverse('posts:post_create'))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_edit_url_exists_author(self):
         """Тестирование изменения поста автором."""
-        response = self.authorized_author_client.get('/posts/1/edit/')
+        response = self.authorized_author_client.get(
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_create_url_redirect_unauthorized_on_login(self):
         """Страница /create/ перенаправит неавторизованного пользователя
         на страницу логина.
         """
-        response = self.guest_client.get('/create/')
+        response = self.guest_client.get(reverse('posts:post_create'))
         self.assertRedirects(
             response, '/auth/login/?next=/create/'
         )
@@ -80,9 +92,11 @@ class PostsURLTests(TestCase):
         """Страница /posts/<post_id>/edit/ перенаправит неавторизованного
         пользователя на страницу логина.
         """
-        response = self.guest_client.get('/posts/1/edit/')
+        response = self.guest_client.get(
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+        )
         self.assertRedirects(
-            response, '/auth/login/?next=/posts/1/edit/'
+            response, f'/auth/login/?next=/posts/{self.post.id}/edit/'
         )
 
     def test_post_edit_url_redirect_authorized_on_detail(self):
@@ -90,21 +104,31 @@ class PostsURLTests(TestCase):
         пользователя, не являющегося автором поста,
         на страницу просмотра поста.
         """
-        response = self.authorized_client.get('/posts/1/edit/')
+        response = self.authorized_client.get(
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+        )
         self.assertRedirects(
-            response, '/posts/1/'
+            response, f'/posts/{self.post.id}/'
         )
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         url_templates_names = {
-            '/': 'posts/index.html',
-            '/group/testovaya-gruppa/': 'posts/group_list.html',
-            '/profile/auth/': 'posts/profile.html',
-            '/posts/1/': 'posts/post_detail.html',
-            '/posts/1/edit/': 'posts/create_post.html',
-            '/create/': 'posts/create_post.html',
-            '/follow/': 'posts/follow.html',
+            reverse('posts:posts_list'): 'posts/index.html',
+            reverse(
+                'posts:group_list', kwargs={'slug': self.group.slug}
+            ): 'posts/group_list.html',
+            reverse(
+                'posts:profile', kwargs={'username': self.user.username}
+            ): 'posts/profile.html',
+            reverse(
+                'posts:post_detail', kwargs={'post_id': self.post.id}
+            ): 'posts/post_detail.html',
+            reverse(
+                'posts:post_edit', kwargs={'post_id': self.post.id}
+            ): 'posts/create_post.html',
+            reverse('posts:post_create'): 'posts/create_post.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
         }
         for url, template in url_templates_names.items():
             with self.subTest(url=url):
@@ -114,42 +138,68 @@ class PostsURLTests(TestCase):
     def test_comment_url_redirect_authorized_on_post_detail(self):
         """При создании комментария авторизованного пользователя перенаправляет
         на страницу поста."""
-        response = self.authorized_client.get('/posts/1/comment/')
+        response = self.authorized_client.get(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id})
+        )
         self.assertRedirects(
-            response, '/posts/1/'
+            response, f'/posts/{self.post.id}/'
         )
 
     def test_comment_url_redirect_unauthorized_on_login(self):
         """Страница posts/<int:post_id>/comment/ перенаправит неавторизованного
         пользователя на страницу логина.
         """
-        response = self.guest_client.get('/posts/1/comment/')
+        response = self.guest_client.get(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id})
+        )
         self.assertRedirects(
-            response, '/auth/login/?next=/posts/1/comment/'
+            response, f'/auth/login/?next=/posts/{self.post.id}/comment/'
         )
 
     def test_follow_url_exists_authorized(self):
         """Авторизованный пользователь может подписываться
         на других пользователей."""
-        response = self.authorized_client.get('/profile/auth/follow/')
-        self.assertRedirects(response, '/profile/auth/')
+        response = self.authorized_client.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user.username}
+            )
+        )
+        self.assertRedirects(response, f'/profile/{self.user.username}/')
 
     def test_unfollow_url_exists_authorized(self):
         """Авторизованный пользователь может отписаться
         от других пользователей."""
-        response = self.authorized_client.get('/profile/auth/unfollow/')
-        self.assertRedirects(response, '/profile/auth/')
+        response = self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow', kwargs={
+                    'username': self.user.username
+                }
+            )
+        )
+        self.assertRedirects(response, f'/profile/{self.user.username}/')
 
     def test_follow_url_unauthorized(self):
         """Неавторизованного пользователя перенаправит на страницу логина."""
-        response = self.guest_client.get('/profile/auth/follow/')
+        response = self.guest_client.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user.username}
+            )
+        )
         self.assertRedirects(
-            response, '/auth/login/?next=/profile/auth/follow/'
+            response,
+            f'/auth/login/?next=/profile/{self.user.username}/follow/'
         )
 
     def test_unfollow_url_unauthorized(self):
         """Неавторизованного пользователя перенаправит на страницу логина."""
-        response = self.guest_client.get('/profile/auth/unfollow/')
+        response = self.guest_client.get(
+            reverse(
+                'posts:profile_unfollow', kwargs={
+                    'username': self.user.username
+                }
+            )
+        )
         self.assertRedirects(
-            response, '/auth/login/?next=/profile/auth/unfollow/'
+            response,
+            f'/auth/login/?next=/profile/{self.user.username}/unfollow/'
         )

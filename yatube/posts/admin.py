@@ -25,7 +25,7 @@ class FollowAdmin(admin.ModelAdmin):
     """Класс для работы с подписками в админ-панели."""
 
     list_display = ('user', 'author')
-    list_filter = ('user', 'author')
+    raw_id_fields = ('user', 'author')
 
 
 class CommentAdmin(admin.ModelAdmin):

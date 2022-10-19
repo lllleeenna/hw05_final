@@ -43,7 +43,7 @@ def profile(request, username):
     following = False
 
     if request.user.is_authenticated:
-        if Follow.objects.filter(user=request.user, author=user):
+        if Follow.objects.filter(user=request.user, author=user).exists():
             following = True
 
     context = {
@@ -59,8 +59,7 @@ def post_detail(request, post_id):
     """Функция формирования страницы поста."""
     template = 'posts/post_detail.html'
     post = get_object_or_404(Post, pk=post_id)
-    user = get_object_or_404(User, pk=post.author_id)
-    count_posts = user.posts.all().count()
+    count_posts = post.author.posts.count()
     comments = post.comments.all()
     form = CommentForm()
 
@@ -97,7 +96,7 @@ def post_edit(request, post_id):
     template = 'posts/create_post.html'
     post = get_object_or_404(Post, pk=post_id)
 
-    if post.author.pk != request.user.pk:
+    if post.author != request.user:
         return redirect('posts:post_detail', post_id=post_id)
 
     form = PostForm(
@@ -136,9 +135,7 @@ def add_comment(request, post_id):
 def follow_index(request):
     """Вывести посты авторов, на которых подписан пользователь."""
     template = 'posts/follow.html'
-    posts = Post.objects.filter(
-        author__in=request.user.follower.all().values('author')
-    )
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = get_page_paginator(request, posts)
     context = {
         'page_obj': page_obj,
@@ -151,9 +148,10 @@ def follow_index(request):
 def profile_follow(request, username):
     """Подписаться на автора."""
     author = get_object_or_404(User, username=username)
-    if not author == request.user:
-        if not Follow.objects.filter(user=request.user, author=author):
-            Follow.objects.create(user=request.user, author=author)
+    if author == request.user:
+        return redirect('posts:profile', username=username)
+    if not Follow.objects.filter(user=request.user, author=author):
+        Follow.objects.create(user=request.user, author=author)
 
     return redirect('posts:profile', username=username)
 

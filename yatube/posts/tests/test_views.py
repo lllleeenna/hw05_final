@@ -68,8 +68,8 @@ class PostPagesTests(TestCase):
         post_group_0 = first_object.group
         post_image_0 = first_object.image
         self.assertEqual(post_text_0, 'Какая-то тестовая запись')
-        self.assertEqual(post_author_0, PostPagesTests.user)
-        self.assertEqual(post_group_0, PostPagesTests.group)
+        self.assertEqual(post_author_0, self.user)
+        self.assertEqual(post_group_0, self.group)
         self.assertTrue(post_image_0)
         self.assertIsInstance(post_image_0, models.fields.files.ImageFieldFile)
 
@@ -378,7 +378,7 @@ class FollowTests(TestCase):
         self.assertEqual(len(response_unfollow.context['page_obj']), 0)
 
         post = Post.objects.create(
-            author=FollowTests.user_auth,
+            author=self.user_auth,
             text='Тестовая запись для проверки подписок'
         )
 

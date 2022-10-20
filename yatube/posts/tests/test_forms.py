@@ -119,7 +119,7 @@ class PostFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        post = Post.objects.get(pk=1)
+        post = Post.objects.get(pk=self.post.id)
         self.assertEqual(post.text, form_data['text'])
 
     @classmethod

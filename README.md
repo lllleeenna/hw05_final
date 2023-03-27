@@ -1,3 +1,46 @@
-# hw05_final
+# Социальная сеть блогеров
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+### Описание
+Социальная сеть для публикации личных дневников. 
+Позволяет создавать личную страницу, подписываться на других авторов, комментировать записи, 
+отправлять записи в сообщества и просматривать там записи других авторов. 
+Имеется возможность модерировать записи и блокировать пользователей.
+
+### Технологии
+- Python 3.7.13
+- Django 2.2.19
+- SQLite
+- Bootstrap
+- Unittest
+
+### Запуск проекта в dev-режиме
+Клонировать репозиторий и перейти в него в командной строке:
+```
+git clone git@github.com:lllleeenna/hw05_final.git
+```
+```
+cd hw05_final
+```
+Создайте и активируйте виртуальное окружение:
+```
+python3.7 -m venv venv
+```
+```
+source venv/bin/activate
+```
+Установите зависимости из файла requirements.txt
+```
+pip install -r requirements.txt
+```
+Перейдите в папку yatube, выполните миграции и запустите проект:
+```
+cd yatube
+```
+```
+python3 manage.py migrate
+```
+```
+python3 manage.py runserver
+```
+### Автор
+Смурова Елена (https://github.com/lllleeenna)
